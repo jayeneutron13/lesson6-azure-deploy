@@ -1,0 +1,157 @@
+name: Deploy HTML App to Azure 
+
+  
+
+on: 
+
+  workflow_dispatch: 
+
+  # push: 
+
+  #   branches: [main] 
+
+       
+
+jobs: 
+
+  # ✅ ADDED: Bootstrap job to create state storage (runs first, only once needed) 
+
+  bootstrap: 
+
+    runs-on: ubuntu-latest 
+
+    steps: 
+
+      - name: Azure Login 
+
+        uses: azure/login@v2 
+
+        with: 
+
+          creds: ${{ secrets.AZURE_CREDENTIALS }} 
+
+  
+
+      - name: Create Terraform State Storage (if not exists) 
+
+        run: | 
+
+          # Create resource group if it doesn't exist 
+
+          az group create -n tfstate-rg -l eastus --output none 2>/dev/null || true 
+
+           
+
+          # Create storage account if it doesn't exist 
+
+          az storage account create \ 
+
+            -n tfstatelola2025 \ 
+
+            -g tfstate-rg \ 
+
+            -l eastus \ 
+
+            --sku Standard_LRS \ 
+
+            --output none 2>/dev/null || true 
+
+           
+
+          # Create container if it doesn't exist 
+
+          az storage container create \ 
+
+            -n tfstate \ 
+
+            --account-name tfstatelola2025 \ 
+
+            --auth-mode login \ 
+
+            --output none 2>/dev/null || true 
+
+  
+
+  deploy: 
+
+    needs: bootstrap  # ✅ Wait for bootstrap to finish first 
+
+    runs-on: ubuntu-latest 
+
+    env: 
+
+      TF_DIR: terraform 
+
+      WEBAPP_DIR: webapp 
+
+      ZIP_NAME: site.zip 
+
+  
+
+    steps: 
+
+      - name: Checkout repository 
+
+        uses: actions/checkout@v4 
+
+  
+
+      - name: Azure Login (Service Principal) 
+
+        uses: azure/login@v2 
+
+        with: 
+
+          creds: ${{ secrets.AZURE_CREDENTIALS }} 
+
+  
+
+      - name: Setup Terraform 
+
+        uses: hashicorp/setup-terraform@v3 
+
+  
+
+      - name: Terraform Init 
+
+        run: terraform -chdir=${{ env.TF_DIR }} init 
+
+  
+
+      - name: Terraform Apply 
+
+        run: terraform -chdir=${{ env.TF_DIR }} apply -auto-approve 
+
+  
+
+      - name: Capture Terraform Outputs 
+
+        id: tfout 
+
+        run: | 
+
+          echo "webapp_name=$(terraform -chdir=${{ env.TF_DIR }} output -raw webapp_name)" >> $GITHUB_OUTPUT 
+
+          echo "webapp_url=$(terraform -chdir=${{ env.TF_DIR }} output -raw webapp_url)" >> $GITHUB_OUTPUT 
+
+  
+
+      - name: Package Static Site 
+
+        run: | 
+
+          cd ${{ env.WEBAPP_DIR }} 
+
+          zip -r ../${{ env.ZIP_NAME }} . 
+
+  
+
+      - name: Deploy to Azure Web App 
+
+        uses: azure/webapps-deploy@v3 
+
+        with: 
+
+          app-name: ${{ steps.tfout.outputs.webapp_name }} 
+
+          package: ./${{ env.ZIP_NAME }} 
