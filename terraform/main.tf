@@ -40,7 +40,7 @@ locals {
 # so Terraform should not try to create them again. 
 # ✅ ONLY app resource group and app resources are managed by Terraform 
 resource "azurerm_resource_group" "rg" { 
-  name     = "lesson6-rg-dd01" 
+  name     = "tfstate-rg-dd01" 
   location = local.location 
 } 
 
