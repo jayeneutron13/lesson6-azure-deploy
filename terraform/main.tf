@@ -9,8 +9,8 @@ terraform {
   # The resource group + storage account + container are created 
   # by the GitHub Actions bootstrap job, not by Terraform. 
   backend "azurerm" { 
-    resource_group_name  = "tfstate-rg-dd01" 
-    storage_account_name = "tfstate2025dd01" 
+    resource_group_name  = "tfstate-rg-ddf" 
+    storage_account_name = "tfstate-rg-ddf" 
     container_name       = "tfstate" 
     key                  = "lesson6.terraform.tfstate" 
   } 
@@ -40,7 +40,7 @@ locals {
 # so Terraform should not try to create them again. 
 # ✅ ONLY app resource group and app resources are managed by Terraform 
 resource "azurerm_resource_group" "rg" { 
-  name     = "tfstate-rg-dd01" 
+  name     = "lesson6-rg-ddf" 
   location = local.location 
 } 
 
