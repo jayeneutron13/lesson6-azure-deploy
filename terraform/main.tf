@@ -10,7 +10,7 @@ terraform {
   # by the GitHub Actions bootstrap job, not by Terraform. 
   backend "azurerm" { 
     resource_group_name  = "tfstate-rg-dd01" 
-    storage_account_name = "tfstate-dd01" 
+    storage_account_name = "tfstate2025dd01" 
     container_name       = "tfstate" 
     key                  = "lesson6.terraform.tfstate" 
   } 
