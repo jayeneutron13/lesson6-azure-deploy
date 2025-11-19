@@ -5,12 +5,9 @@ terraform {
   } 
   required_version = ">=1.4" 
 
-  # ✅ Backend for storing Terraform state in Azure Storage. 
-  # The resource group + storage account + container are created 
-  # by the GitHub Actions bootstrap job, not by Terraform. 
   backend "azurerm" { 
-    resource_group_name  = "tfstate-rg-df" 
-    storage_account_name = "tfstate2025df" 
+    resource_group_name  = "tfstate-rg" 
+    storage_account_name = "tfstateddf2025" 
     container_name       = "tfstate" 
     key                  = "lesson6.terraform.tfstate" 
   } 
@@ -35,12 +32,8 @@ locals {
   app_name      = "${local.app_base_name}-${random_string.suffix.result}" 
 } 
 
-# ❌ REMOVED: tfstate_rg, tfstate storage account, and container. 
-# Those are created by the bootstrap job in the GitHub Actions workflow, 
-# so Terraform should not try to create them again. 
-# ✅ ONLY app resource group and app resources are managed by Terraform 
 resource "azurerm_resource_group" "rg" { 
-  name     = "lesson6-rg-df" 
+  name     = "lesson6-ddf" 
   location = local.location 
 } 
 
